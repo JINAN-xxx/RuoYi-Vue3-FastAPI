@@ -27,7 +27,9 @@ class BaseKnowledgeProvider(ABC):
     provider_name = 'base'
 
     @abstractmethod
-    def index_document(self, document: KnowledgeDocument) -> tuple[str, int]:
+    def index_document(
+        self, document: KnowledgeDocument, chunk_size: int | None = None, chunk_overlap: int | None = None
+    ) -> tuple[str, int]:
         """
         建立文档索引，返回预览文本与切片数量
         """

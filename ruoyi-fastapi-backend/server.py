@@ -13,6 +13,7 @@ from config.get_scheduler import SchedulerUtil
 from exceptions.handle import handle_exception
 from middlewares.handle import handle_middleware
 from module_admin.service.log_service import LogAggregatorService
+from module_knowledge.service.knowledge_task_service import KnowledgeTaskWorkerService
 from sub_applications.handle import handle_sub_applications
 from utils.common_util import worship
 from utils.log_util import logger
@@ -28,6 +29,9 @@ async def _start_background_tasks(app: FastAPI) -> None:
     """
     await SchedulerUtil.init_system_scheduler(app.state.redis)
     app.state.log_aggregator_task = asyncio.create_task(LogAggregatorService.consume_stream(app.state.redis))
+    app.state.knowledge_task_consumer_task = asyncio.create_task(
+        KnowledgeTaskWorkerService.consume_stream(app.state.redis)
+    )
 
 
 async def _stop_background_tasks(app: FastAPI) -> None:
@@ -42,6 +46,13 @@ async def _stop_background_tasks(app: FastAPI) -> None:
         log_task.cancel()
         try:
             await log_task
+        except asyncio.CancelledError:
+            pass
+    knowledge_task = getattr(app.state, 'knowledge_task_consumer_task', None)
+    if knowledge_task:
+        knowledge_task.cancel()
+        try:
+            await knowledge_task
         except asyncio.CancelledError:
             pass
     lock_task = getattr(app.state, 'lock_renewal_task', None)

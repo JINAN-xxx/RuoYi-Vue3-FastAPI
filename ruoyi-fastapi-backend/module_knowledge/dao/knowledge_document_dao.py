@@ -59,6 +59,26 @@ class KnowledgeDocumentDao:
         return list((await db.execute(query)).scalars().all())
 
     @classmethod
+    async def get_document_list_by_ids(
+        cls,
+        db: AsyncSession,
+        visible_sql: ColumnElement,
+        status: str | None = 'ready',
+        document_ids: list[int] | None = None,
+    ) -> list[KnowledgeDocument]:
+        query = (
+            select(KnowledgeDocument)
+            .where(
+                visible_sql,
+                KnowledgeDocument.status == status if status else True,
+                KnowledgeDocument.document_id.in_(document_ids) if document_ids else True,
+            )
+            .order_by(KnowledgeDocument.document_id.desc())
+        )
+
+        return list((await db.execute(query)).scalars().all())
+
+    @classmethod
     async def add_document_dao(cls, db: AsyncSession, document: KnowledgeDocumentModel) -> KnowledgeDocument:
         db_document = KnowledgeDocument(**document.model_dump(exclude_unset=True))
         db.add(db_document)

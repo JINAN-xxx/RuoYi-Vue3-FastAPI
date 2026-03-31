@@ -1,28 +1,26 @@
 from collections.abc import Sequence
 
 from module_knowledge.entity.do.knowledge_document_do import KnowledgeDocument
-from module_knowledge.service.knowledge_vector_service import KnowledgeVectorService
+from module_knowledge.service.llamaindex_knowledge_service import LlamaIndexKnowledgeService
 from module_knowledge.service.providers.base import BaseKnowledgeProvider, KnowledgeChunkResult
 
 
-class MilvusKnowledgeProvider(BaseKnowledgeProvider):
+class LlamaIndexKnowledgeProvider(BaseKnowledgeProvider):
     """
-    基于 Milvus 的知识库 Provider
+    基于 LlamaIndex 的知识库 Provider
     """
 
-    provider_name = 'milvus'
+    provider_name = 'llamaindex'
 
     def index_document(
         self, document: KnowledgeDocument, chunk_size: int | None = None, chunk_overlap: int | None = None
     ) -> tuple[str, int]:
-        return KnowledgeVectorService.index_document(
+        return LlamaIndexKnowledgeService.index_document(
             document, chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
 
     def delete_document(self, document_id: int) -> None:
-        KnowledgeVectorService.delete_document_vectors(document_id)
+        LlamaIndexKnowledgeService.delete_document(document_id)
 
     def search(self, query: str, document_ids: Sequence[int], limit: int | None = None) -> list[KnowledgeChunkResult]:
-        rows = KnowledgeVectorService.search_document_chunks(query, document_ids, limit)
-
-        return [KnowledgeChunkResult(**row) for row in rows]
+        return LlamaIndexKnowledgeService.search(query, document_ids, limit)

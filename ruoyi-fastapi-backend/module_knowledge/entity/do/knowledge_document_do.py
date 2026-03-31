@@ -24,6 +24,12 @@ class KnowledgeDocument(Base):
     file_size = Column(Integer, nullable=False, default=0, comment='文件大小')
     scope = Column(String(20), nullable=False, default='personal', comment='知识库范围')
     status = Column(String(20), nullable=False, default='indexing', comment='索引状态')
+    provider_name = Column(
+        String(32),
+        nullable=True,
+        server_default=SqlalchemyUtil.get_server_default_null(DataBaseConfig.db_type),
+        comment='索引Provider',
+    )
     chunk_count = Column(Integer, nullable=True, comment='切片数量')
     content_preview = Column(
         Text,

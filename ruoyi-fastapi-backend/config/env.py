@@ -176,9 +176,11 @@ class KnowledgeSettings(BaseSettings):
     知识库配置
     """
 
+    knowledge_provider: Literal['milvus', 'llamaindex'] = 'llamaindex'
     knowledge_milvus_uri: str = 'http://127.0.0.1:19530'
     knowledge_milvus_token: str = ''
     knowledge_milvus_collection: str = 'ruoyi_knowledge_document'
+    knowledge_llamaindex_milvus_collection: str = 'ruoyi_knowledge_document_llamaindex'
     knowledge_embedding_base_url: str = 'https://api.siliconflow.cn/v1'
     knowledge_embedding_api_key: str = ''
     knowledge_embedding_model: str = 'BAAI/bge-large-zh-v1.5'
@@ -187,6 +189,14 @@ class KnowledgeSettings(BaseSettings):
     knowledge_chunk_size: int = 400
     knowledge_chunk_overlap: int = 50
     knowledge_search_top_k: int = 10
+    knowledge_task_stream_key: str = 'knowledge:index:stream'
+    knowledge_task_stream_group: str = 'knowledge_indexer'
+    knowledge_task_stream_consumer_prefix: str = 'worker'
+    knowledge_task_stream_batch_size: int = 10
+    knowledge_task_stream_block_ms: int = 2000
+    knowledge_task_stream_claim_idle_ms: int = 60000
+    knowledge_task_stream_claim_batch_size: int = 10
+    knowledge_task_stream_claim_interval_ms: int = 5000
 
 
 class CachePathConfig:

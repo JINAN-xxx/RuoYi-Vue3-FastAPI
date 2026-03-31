@@ -133,8 +133,18 @@
             <span v-else class="preview-text">{{ scope.row.contentPreview || "索引完成后显示预览摘要" }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" width="200" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
+            <el-button
+              link
+              type="primary"
+              icon="RefreshRight"
+              @click="handleReindex(scope.row)"
+              :disabled="scope.row.status === 'indexing'"
+              v-hasPermi="['ai:knowledge:upload']"
+            >
+              重新索引
+            </el-button>
             <el-button
               link
               type="danger"
@@ -181,11 +191,57 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog
+      title="重新索引文档"
+      v-model="reindexOpen"
+      width="460px"
+      append-to-body
+      class="knowledge-dialog"
+    >
+      <el-form :model="reindexForm" label-width="110px">
+        <el-form-item label="目标文档">
+          <div class="reindex-target">{{ reindexTargetName || "-" }}</div>
+        </el-form-item>
+        <el-form-item label="切片长度">
+          <el-input-number
+            v-model="reindexForm.chunkSize"
+            :min="100"
+            :max="4000"
+            :step="50"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="重叠长度">
+          <el-input-number
+            v-model="reindexForm.chunkOverlap"
+            :min="0"
+            :max="1000"
+            :step="10"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <div class="upload-hint">
+          重新索引会按这组参数重新切片并重建向量索引。重叠长度必须小于切片长度。
+        </div>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="reindexOpen = false">取消</el-button>
+          <el-button type="primary" :loading="reindexing" @click="submitReindex">开始重新索引</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="AiKnowledge">
-import { delKnowledge, listKnowledge, uploadKnowledge } from "@/api/ai/knowledge";
+import {
+  delKnowledge,
+  listKnowledge,
+  reindexKnowledge,
+  uploadKnowledge,
+} from "@/api/ai/knowledge";
 
 const { proxy } = getCurrentInstance();
 const baseApi = import.meta.env.VITE_APP_BASE_API;
@@ -195,9 +251,13 @@ const loading = ref(false);
 const uploading = ref(false);
 const showSearch = ref(true);
 const uploadOpen = ref(false);
+const reindexOpen = ref(false);
 const total = ref(0);
 const fileRef = ref(null);
 const pollingTimer = ref(null);
+const reindexing = ref(false);
+const reindexTargetId = ref(null);
+const reindexTargetName = ref("");
 
 const queryParams = reactive({
   pageNum: 1,
@@ -210,6 +270,11 @@ const queryParams = reactive({
 const uploadForm = reactive({
   scope: "personal",
   file: null,
+});
+
+const reindexForm = reactive({
+  chunkSize: 400,
+  chunkOverlap: 50,
 });
 
 const documentStats = computed(() => ({
@@ -284,6 +349,39 @@ function handleDelete(row) {
       getList();
     })
     .catch(() => {});
+}
+
+function handleReindex(row) {
+  reindexTargetId.value = row.documentId;
+  reindexTargetName.value = row.originName;
+  reindexForm.chunkSize = row.chunkSize || 400;
+  reindexForm.chunkOverlap = row.chunkOverlap ?? 50;
+  reindexOpen.value = true;
+}
+
+function submitReindex() {
+  if (!reindexTargetId.value) {
+    proxy.$modal.msgWarning("未找到需要重新索引的文档");
+    return;
+  }
+  if (reindexForm.chunkOverlap >= reindexForm.chunkSize) {
+    proxy.$modal.msgWarning("重叠长度必须小于切片长度");
+    return;
+  }
+
+  reindexing.value = true;
+  reindexKnowledge(reindexTargetId.value, {
+    chunkSize: reindexForm.chunkSize,
+    chunkOverlap: reindexForm.chunkOverlap,
+  })
+    .then((res) => {
+      proxy.$modal.msgSuccess(res.msg || "已提交重新索引任务");
+      reindexOpen.value = false;
+      getList();
+    })
+    .finally(() => {
+      reindexing.value = false;
+    });
 }
 
 function statusLabel(status) {
@@ -390,6 +488,14 @@ onBeforeUnmount(() => {
 .upload-file-name {
   margin-top: 10px;
   color: var(--app-text-primary);
+}
+
+.reindex-target {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  color: var(--app-text-primary);
+  font-weight: 600;
 }
 
 .error-text {

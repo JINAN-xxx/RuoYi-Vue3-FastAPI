@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import BackgroundTasks, File, Form, Path, Query, Request, Response, UploadFile
+from fastapi import File, Form, Path, Query, Request, Response, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.annotation.log_annotation import Log
@@ -14,6 +14,7 @@ from module_admin.entity.vo.user_vo import CurrentUserModel
 from module_knowledge.entity.vo.knowledge_document_vo import (
     KnowledgeDocumentModel,
     KnowledgeDocumentPageQueryModel,
+    KnowledgeDocumentReindexModel,
     KnowledgeDocumentUploadModel,
 )
 from module_knowledge.service.knowledge_document_service import KnowledgeDocumentService
@@ -92,7 +93,6 @@ async def get_knowledge_document_detail(
 @Log(title='知识库管理', business_type=BusinessType.INSERT)
 async def upload_knowledge_document(
     request: Request,
-    background_tasks: BackgroundTasks,
     scope: Annotated[str, Form()] = 'personal',
     file: Annotated[UploadFile, File(...)] = None,
     query_db: Annotated[AsyncSession, DBSessionDependency()] = None,
@@ -100,7 +100,6 @@ async def upload_knowledge_document(
 ) -> Response:
     result = await KnowledgeDocumentService.upload_document_services(
         request=request,
-        background_tasks=background_tasks,
         query_db=query_db,
         current_user=current_user,
         upload_data=KnowledgeDocumentUploadModel(scope=scope),
@@ -126,6 +125,33 @@ async def delete_knowledge_document(
     current_user: Annotated[CurrentUserModel, CurrentUserDependency()],
 ) -> Response:
     result = await KnowledgeDocumentService.delete_document_services(query_db, document_id, current_user)
+    logger.info(result.message)
+
+    return ResponseUtil.success(msg=result.message)
+
+
+@knowledge_document_controller.post(
+    '/{document_id}/reindex',
+    summary='重新索引知识库文档接口',
+    description='用于按当前切片与向量配置重新建立指定知识库文档索引',
+    response_model=ResponseBaseModel,
+    dependencies=[UserInterfaceAuthDependency('ai:knowledge:upload')],
+)
+@Log(title='知识库管理', business_type=BusinessType.UPDATE)
+async def reindex_knowledge_document(
+    request: Request,
+    document_id: Annotated[int, Path(description='文档ID')],
+    page_object: KnowledgeDocumentReindexModel,
+    query_db: Annotated[AsyncSession, DBSessionDependency()],
+    current_user: Annotated[CurrentUserModel, CurrentUserDependency()],
+) -> Response:
+    result = await KnowledgeDocumentService.reindex_document_services(
+        request=request,
+        query_db=query_db,
+        document_id=document_id,
+        current_user=current_user,
+        reindex_config=page_object,
+    )
     logger.info(result.message)
 
     return ResponseUtil.success(msg=result.message)

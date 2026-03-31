@@ -40,3 +40,11 @@ export function delKnowledge(documentId) {
     method: "delete",
   });
 }
+
+export function reindexKnowledge(documentId, data) {
+  return request({
+    url: "/ai/knowledge/" + documentId + "/reindex",
+    method: "post",
+    data,
+  });
+}

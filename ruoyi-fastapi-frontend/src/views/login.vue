@@ -1,66 +1,85 @@
 <template>
-  <div class="login">
-    <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
-      <h3 class="title">{{ title }}</h3>
-      <el-form-item prop="username">
-        <el-input
-          v-model="loginForm.username"
-          type="text"
-          size="large"
-          auto-complete="off"
-          placeholder="账号"
-        >
-          <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="password">
-        <el-input
-          v-model="loginForm.password"
-          type="password"
-          size="large"
-          auto-complete="off"
-          placeholder="密码"
-          @keyup.enter="handleLogin"
-        >
-          <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="code" v-if="captchaEnabled">
-        <el-input
-          v-model="loginForm.code"
-          size="large"
-          auto-complete="off"
-          placeholder="验证码"
-          style="width: 63%"
-          @keyup.enter="handleLogin"
-        >
-          <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
-        </el-input>
-        <div class="login-code">
-          <img :src="codeUrl" @click="getCode" class="login-code-img"/>
+  <div class="login-page">
+    <section class="login-card">
+      <div class="login-card__header">
+        <div class="brand-badge">
+          <img :src="logoSrc" alt="logo" class="brand-badge__logo" />
+          <div>
+            <p class="brand-badge__label">后台管理系统</p>
+            <h1 class="brand-badge__title">{{ title }}</h1>
+          </div>
         </div>
-      </el-form-item>
-      <el-checkbox v-model="loginForm.rememberMe" style="margin:0px 0px 25px 0px;">记住密码</el-checkbox>
-      <el-form-item style="width:100%;">
-        <el-button
-          :loading="loading"
-          size="large"
-          type="primary"
-          style="width:100%;"
-          @click.prevent="handleLogin"
-        >
-          <span v-if="!loading">登 录</span>
-          <span v-else>登 录 中...</span>
-        </el-button>
-        <div style="float: right;" v-if="register">
-          <router-link class="link-type" :to="'/register'">立即注册</router-link>
+      </div>
+
+      <div class="login-card__intro">
+        <h3>欢迎登录</h3>
+        <p>请输入账号密码登录系统。</p>
+      </div>
+
+      <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
+        <el-form-item prop="username">
+          <el-input
+            v-model="loginForm.username"
+            type="text"
+            size="large"
+            auto-complete="off"
+            placeholder="请输入账号"
+          >
+            <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
+          </el-input>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input
+            v-model="loginForm.password"
+            type="password"
+            size="large"
+            auto-complete="off"
+            placeholder="请输入密码"
+            @keyup.enter="handleLogin"
+          >
+            <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
+          </el-input>
+        </el-form-item>
+        <el-form-item v-if="captchaEnabled" prop="code">
+          <div class="captcha-row">
+            <el-input
+              v-model="loginForm.code"
+              size="large"
+              auto-complete="off"
+              placeholder="请输入验证码"
+              @keyup.enter="handleLogin"
+            >
+              <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
+            </el-input>
+            <button type="button" class="captcha-card" @click="getCode">
+              <img :src="codeUrl" alt="验证码" class="login-code-img" />
+            </button>
+          </div>
+        </el-form-item>
+
+        <div class="login-form__options">
+          <el-checkbox v-model="loginForm.rememberMe">记住密码</el-checkbox>
+          <router-link v-if="register" class="link-type" to="/register">立即注册</router-link>
         </div>
-      </el-form-item>
-    </el-form>
-    <!--  底部  -->
-    <div class="el-login-footer">
-      <span>{{ footerContent }}</span>
-    </div>
+
+        <el-form-item class="login-form__submit">
+          <el-button
+            :loading="loading"
+            size="large"
+            type="primary"
+            class="login-submit"
+            @click.prevent="handleLogin"
+          >
+            <span v-if="!loading">进入系统</span>
+            <span v-else>登录中...</span>
+          </el-button>
+        </el-form-item>
+      </el-form>
+
+      <div class="login-card__footer">
+        <span>{{ footerContent }}</span>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -68,6 +87,7 @@
 import { getCodeImg } from "@/api/login";
 import Cookies from "js-cookie";
 import { encrypt, decrypt } from "@/utils/jsencrypt";
+import logoSrc from "@/assets/logo/logo.png";
 import useUserStore from '@/store/modules/user'
 import defaultSettings from '@/settings'
 
@@ -94,9 +114,7 @@ const loginRules = {
 
 const codeUrl = ref("");
 const loading = ref(false);
-// 验证码开关
 const captchaEnabled = ref(true);
-// 注册开关
 const register = ref(false);
 const redirect = ref(undefined);
 
@@ -108,18 +126,15 @@ function handleLogin() {
   proxy.$refs.loginRef.validate(valid => {
     if (valid) {
       loading.value = true;
-      // 勾选了需要记住密码设置在 cookie 中设置记住用户名和密码
       if (loginForm.value.rememberMe) {
         Cookies.set("username", loginForm.value.username, { expires: 30 });
         Cookies.set("password", encrypt(loginForm.value.password), { expires: 30 });
         Cookies.set("rememberMe", loginForm.value.rememberMe, { expires: 30 });
       } else {
-        // 否则移除
         Cookies.remove("username");
         Cookies.remove("password");
         Cookies.remove("rememberMe");
       }
-      // 调用action的登录方法
       userStore.login(loginForm.value).then(() => {
         const query = route.query;
         const otherQueryParams = Object.keys(query).reduce((acc, cur) => {
@@ -131,7 +146,6 @@ function handleLogin() {
         router.push({ path: redirect.value || "/", query: otherQueryParams });
       }).catch(() => {
         loading.value = false;
-        // 重新获取验证码
         if (captchaEnabled.value) {
           getCode();
         }
@@ -167,78 +181,221 @@ getCookie();
 </script>
 
 <style lang='scss' scoped>
-.login {
+.login-page {
+  min-height: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100%;
-  background-image: url("../assets/images/login-background.jpg");
-  background-size: cover;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.05), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.04), transparent 24%),
+    linear-gradient(180deg, #f5f7fb 0%, #eef2f7 100%);
 }
 
-html.dark .login {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("../assets/images/login-background.jpg");
-}
-.title {
-  margin: 0px auto 30px auto;
-  text-align: center;
-  color: #707070;
-}
-
-html.dark .title {
-  color: var(--el-text-color-primary);
-}
-
-.login-form {
-  border-radius: 6px;
+.login-card {
+  width: min(440px, 100%);
+  padding: 32px;
+  border: 1px solid #e6ebf2;
+  border-radius: 18px;
   background: #ffffff;
-  width: 400px;
-  padding: 25px 25px 5px 25px;
-  z-index: 1;
-  .el-input {
-    height: 40px;
-    input {
-      height: 40px;
-    }
-  }
-  .input-icon {
-    height: 39px;
-    width: 14px;
-    margin-left: 0px;
-  }
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
 }
 
-html.dark .login-form {
-  background: var(--el-bg-color);
+.login-card__header {
+  margin-bottom: 28px;
 }
-.login-tip {
-  font-size: 13px;
-  text-align: center;
-  color: #bfbfbf;
+
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-.login-code {
-  width: 33%;
-  height: 40px;
-  float: right;
-  img {
-    cursor: pointer;
-    vertical-align: middle;
-  }
+
+.brand-badge__logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  padding: 8px;
+  background: #eef4ff;
+  border: 1px solid #dbe7fb;
 }
-.el-login-footer {
-  height: 40px;
-  line-height: 40px;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  color: #fff;
-  font-family: Arial;
+
+.brand-badge__label {
+  margin: 0;
   font-size: 12px;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
+  color: #7b8aa0;
 }
+
+.brand-badge__title {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #142136;
+}
+
+.login-card__intro {
+  margin-bottom: 24px;
+}
+
+.login-card__intro h3 {
+  margin: 0;
+  font-size: 28px;
+  color: #142136;
+}
+
+.login-card__intro p {
+  margin: 8px 0 0;
+  color: #607089;
+  line-height: 1.7;
+}
+
+.login-form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+
+.login-form :deep(.el-input__wrapper) {
+  min-height: 52px;
+  padding-inline: 14px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #d8e0ec inset;
+}
+
+.login-form :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px rgba(38, 106, 233, 0.45) inset;
+}
+
+.input-icon {
+  width: 14px;
+  height: 14px;
+  color: #5d6b82;
+}
+
+.captcha-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 138px;
+  gap: 12px;
+}
+
+.captcha-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px solid #d8e0ec;
+  border-radius: 14px;
+  background: #f9fbfd;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.captcha-card:hover {
+  border-color: #c7d3e5;
+}
+
 .login-code-img {
+  max-width: 100%;
   height: 40px;
-  padding-left: 12px;
+  object-fit: contain;
+}
+
+.login-form__options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 0 22px;
+  font-size: 14px;
+}
+
+.link-type {
+  color: var(--el-color-primary);
+  font-weight: 600;
+}
+
+.login-form__submit {
+  margin-bottom: 0 !important;
+}
+
+.login-submit {
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: #2f6fed;
+  box-shadow: none;
+}
+
+.login-submit:hover {
+  background: #255fd3;
+}
+
+.login-card__footer {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #7d8ba0;
+  text-align: center;
+  line-height: 1.8;
+}
+
+html.dark .login-page {
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.1), transparent 24%),
+    linear-gradient(180deg, #0f1724 0%, #111c2d 100%);
+}
+
+html.dark .login-card {
+  background: #121c2d;
+  border-color: rgba(148, 163, 184, 0.16);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+}
+
+html.dark .brand-badge__logo {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.16);
+}
+
+html.dark .brand-badge__label {
+  color: rgba(220, 229, 243, 0.54);
+}
+
+html.dark .brand-badge__title,
+html.dark .login-card__intro h3 {
+  color: #f5f9ff;
+}
+
+html.dark .login-card__intro p,
+html.dark .login-card__footer {
+  color: rgba(220, 229, 243, 0.68);
+}
+
+html.dark .login-form :deep(.el-input__wrapper) {
+  background: #162235;
+  box-shadow: 0 0 0 1px rgba(160, 177, 204, 0.14) inset;
+}
+
+html.dark .captcha-card {
+  background: #162235;
+  border-color: rgba(160, 177, 204, 0.14);
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    padding: 14px;
+  }
+
+  .login-card {
+    padding: 24px 20px;
+  }
+
+  .login-card__header {
+    margin-bottom: 24px;
+  }
+
+  .captcha-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

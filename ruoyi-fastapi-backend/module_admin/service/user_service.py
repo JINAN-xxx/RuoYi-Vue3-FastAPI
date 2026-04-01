@@ -427,6 +427,11 @@ class UserService:
         df.rename(columns=header_dict, inplace=True)
         add_error_result = []
         count = 0
+        init_password = await ConfigService.query_config_list_from_cache_services(
+            request.app.state.redis, 'sys.user.initPassword'
+        )
+        if len(init_password) < CommonConstant.MIN_PASSWORD_LENGTH:
+            raise ServiceException(message=f'初始密码配置长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符')
         try:
             for _index, row in df.iterrows():
                 count = count + 1
@@ -435,11 +440,7 @@ class UserService:
                 add_user = UserModel(
                     deptId=row['dept_id'],
                     userName=row['user_name'],
-                    password=PwdUtil.get_password_hash(
-                        await ConfigService.query_config_list_from_cache_services(
-                            request.app.state.redis, 'sys.user.initPassword'
-                        )
-                    ),
+                    password=PwdUtil.get_password_hash(init_password),
                     nickName=row['nick_name'],
                     email=row['email'],
                     phonenumber=str(row['phonenumber']),

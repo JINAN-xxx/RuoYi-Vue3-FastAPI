@@ -538,6 +538,7 @@ const deptName = ref("");
 const deptOptions = ref(undefined);
 const enabledDeptOptions = ref(undefined);
 const initPassword = ref(undefined);
+const defaultInitPassword = "12345678";
 const postOptions = ref([]);
 const roleOptions = ref([]);
 /*** 用户导入参数 */
@@ -593,9 +594,9 @@ const data = reactive({
     password: [
       { required: true, message: "用户密码不能为空", trigger: "blur" },
       {
-        min: 5,
+        min: 8,
         max: 20,
-        message: "用户密码长度必须介于 5 和 20 之间",
+        message: "用户密码长度必须介于 8 和 20 之间",
         trigger: "blur",
       },
       {
@@ -746,8 +747,8 @@ function handleResetPwd(row) {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
       closeOnClickModal: false,
-      inputPattern: /^.{5,20}$/,
-      inputErrorMessage: "用户密码长度必须介于 5 和 20 之间",
+      inputPattern: /^.{8,20}$/,
+      inputErrorMessage: "用户密码长度必须介于 8 和 20 之间",
       inputValidator: (value) => {
         if (/<|>|"|'|\||\\/.test(value)) {
           return "不能包含非法字符：< > \" ' \\\ |";
@@ -852,7 +853,7 @@ function handleAdd() {
     roleOptions.value = response.roles;
     open.value = true;
     title.value = "添加用户";
-    form.value.password = initPassword.value;
+    form.value.password = initPassword.value || defaultInitPassword;
   });
 }
 /** 修改按钮操作 */
@@ -895,7 +896,7 @@ onMounted(() => {
   getDeptTree();
   getList();
   proxy.getConfigKey("sys.user.initPassword").then((response) => {
-    initPassword.value = response.msg;
+    initPassword.value = response.msg && response.msg.length >= 8 ? response.msg : defaultInitPassword;
   });
 });
 </script>

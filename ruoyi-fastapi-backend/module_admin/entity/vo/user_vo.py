@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 from pydantic_validation_decorator import Network, NotBlank, Size, Xss
 
+from common.constant import CommonConstant
 from exceptions.exception import ModelValidatorException
 from module_admin.entity.vo.dept_vo import DeptModel
 from module_admin.entity.vo.post_vo import PostModel
@@ -51,6 +52,10 @@ class UserModel(BaseModel):
 
     @model_validator(mode='after')
     def check_password(self) -> 'UserModel':
+        if self.password is not None and len(self.password) < CommonConstant.MIN_PASSWORD_LENGTH:
+            raise ModelValidatorException(
+                message=f'密码长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符'
+            )
         pattern = r"""^[^<>"'|\\]+$"""
         if self.password is None or re.match(pattern, self.password):
             return self
@@ -222,6 +227,10 @@ class ResetPasswordModel(BaseModel):
 
     @model_validator(mode='after')
     def check_new_password(self) -> 'ResetPasswordModel':
+        if self.new_password is not None and len(self.new_password) < CommonConstant.MIN_PASSWORD_LENGTH:
+            raise ModelValidatorException(
+                message=f'密码长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符'
+            )
         pattern = r"""^[^<>"'|\\]+$"""
         if self.new_password is None or re.match(pattern, self.new_password):
             return self

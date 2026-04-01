@@ -3,6 +3,7 @@ import re
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
+from common.constant import CommonConstant
 from exceptions.exception import ModelValidatorException
 from module_admin.entity.vo.menu_vo import MenuModel
 
@@ -29,6 +30,10 @@ class UserRegister(BaseModel):
 
     @model_validator(mode='after')
     def check_password(self) -> 'UserRegister':
+        if self.password is not None and len(self.password) < CommonConstant.MIN_PASSWORD_LENGTH:
+            raise ModelValidatorException(
+                message=f'密码长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符'
+            )
         pattern = r"""^[^<>"'|\\]+$"""
         if self.password is None or re.match(pattern, self.password):
             return self

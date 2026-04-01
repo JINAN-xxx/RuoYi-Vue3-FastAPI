@@ -6,6 +6,7 @@ class CommonConstant:
     常用常量
 
     PASSWORD_ERROR_COUNT: 密码错误次数
+    MIN_PASSWORD_LENGTH: 密码最小长度
     WWW: www主域
     HTTP: http请求
     HTTPS: https请求
@@ -21,6 +22,7 @@ class CommonConstant:
     """
 
     PASSWORD_ERROR_COUNT = 5
+    MIN_PASSWORD_LENGTH = 8
     WWW = 'www.'
     HTTP = 'http://'
     HTTPS = 'https://'

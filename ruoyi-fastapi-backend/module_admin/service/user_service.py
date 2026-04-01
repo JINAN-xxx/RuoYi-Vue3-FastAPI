@@ -1,4 +1,5 @@
 import io
+import re
 from datetime import datetime
 from typing import Any
 
@@ -430,8 +431,8 @@ class UserService:
         init_password = await ConfigService.query_config_list_from_cache_services(
             request.app.state.redis, 'sys.user.initPassword'
         )
-        if len(init_password) < CommonConstant.MIN_PASSWORD_LENGTH:
-            raise ServiceException(message=f'初始密码配置长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符')
+        if not re.match(CommonConstant.PASSWORD_PATTERN, init_password):
+            raise ServiceException(message=f'初始密码配置不符合要求：{CommonConstant.PASSWORD_VALIDATE_MESSAGE}')
         try:
             for _index, row in df.iterrows():
                 count = count + 1

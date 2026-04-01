@@ -84,6 +84,8 @@ const title = import.meta.env.VITE_APP_TITLE;
 const footerContent = defaultSettings.footerContent
 const router = useRouter();
 const { proxy } = getCurrentInstance();
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s<>"'|\\])[^<>"'|\\\s]{8,24}$/;
+const strongPasswordMessage = "密码长度必须介于 8 和 24 之间，且必须包含大小写字母、数字和特殊字符";
 
 const registerForm = ref({
   username: "",
@@ -108,8 +110,7 @@ const registerRules = {
   ],
   password: [
     { required: true, trigger: "blur", message: "请输入您的密码" },
-    { min: 8, max: 20, message: "用户密码长度必须介于 8 和 20 之间", trigger: "blur" },
-    { pattern: /^[^<>"'|\\]+$/, message: "不能包含非法字符：< > \" ' \\\ |", trigger: "blur" }
+    { pattern: strongPasswordPattern, message: strongPasswordMessage, trigger: "blur" }
   ],
   confirmPassword: [
     { required: true, trigger: "blur", message: "请再次输入您的密码" },

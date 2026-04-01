@@ -52,14 +52,13 @@ class UserModel(BaseModel):
 
     @model_validator(mode='after')
     def check_password(self) -> 'UserModel':
-        if self.password is not None and len(self.password) < CommonConstant.MIN_PASSWORD_LENGTH:
-            raise ModelValidatorException(
-                message=f'密码长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符'
-            )
-        pattern = r"""^[^<>"'|\\]+$"""
-        if self.password is None or re.match(pattern, self.password):
+        if self.password is None:
             return self
-        raise ModelValidatorException(message='密码不能包含非法字符：< > " \' \\ |')
+        if re.match(CommonConstant.PASSWORD_PATTERN, self.password):
+            return self
+        if re.search(r"""[<>"'|\\]""", self.password):
+            raise ModelValidatorException(message='密码不能包含非法字符：< > " \' \\ |')
+        raise ModelValidatorException(message=CommonConstant.PASSWORD_VALIDATE_MESSAGE)
 
     @model_validator(mode='after')
     def check_admin(self) -> 'UserModel':
@@ -227,14 +226,13 @@ class ResetPasswordModel(BaseModel):
 
     @model_validator(mode='after')
     def check_new_password(self) -> 'ResetPasswordModel':
-        if self.new_password is not None and len(self.new_password) < CommonConstant.MIN_PASSWORD_LENGTH:
-            raise ModelValidatorException(
-                message=f'密码长度不能少于{CommonConstant.MIN_PASSWORD_LENGTH}个字符'
-            )
-        pattern = r"""^[^<>"'|\\]+$"""
-        if self.new_password is None or re.match(pattern, self.new_password):
+        if self.new_password is None:
             return self
-        raise ModelValidatorException(message='密码不能包含非法字符：< > " \' \\ |')
+        if re.match(CommonConstant.PASSWORD_PATTERN, self.new_password):
+            return self
+        if re.search(r"""[<>"'|\\]""", self.new_password):
+            raise ModelValidatorException(message='密码不能包含非法字符：< > " \' \\ |')
+        raise ModelValidatorException(message=CommonConstant.PASSWORD_VALIDATE_MESSAGE)
 
 
 class ResetUserModel(UserModel):

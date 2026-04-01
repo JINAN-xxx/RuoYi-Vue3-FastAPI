@@ -538,7 +538,9 @@ const deptName = ref("");
 const deptOptions = ref(undefined);
 const enabledDeptOptions = ref(undefined);
 const initPassword = ref(undefined);
-const defaultInitPassword = "12345678";
+const defaultInitPassword = "Temp@1234";
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s<>"'|\\])[^<>"'|\\\s]{8,24}$/;
+const strongPasswordMessage = "用户密码长度必须介于 8 和 24 之间，且必须包含大小写字母、数字和特殊字符";
 const postOptions = ref([]);
 const roleOptions = ref([]);
 /*** 用户导入参数 */
@@ -594,14 +596,8 @@ const data = reactive({
     password: [
       { required: true, message: "用户密码不能为空", trigger: "blur" },
       {
-        min: 8,
-        max: 20,
-        message: "用户密码长度必须介于 8 和 20 之间",
-        trigger: "blur",
-      },
-      {
-        pattern: /^[^<>"'|\\]+$/,
-        message: "不能包含非法字符：< > \" ' \\\ |",
+        pattern: strongPasswordPattern,
+        message: strongPasswordMessage,
         trigger: "blur",
       },
     ],
@@ -747,11 +743,11 @@ function handleResetPwd(row) {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
       closeOnClickModal: false,
-      inputPattern: /^.{8,20}$/,
-      inputErrorMessage: "用户密码长度必须介于 8 和 20 之间",
+      inputPattern: strongPasswordPattern,
+      inputErrorMessage: strongPasswordMessage,
       inputValidator: (value) => {
-        if (/<|>|"|'|\||\\/.test(value)) {
-          return "不能包含非法字符：< > \" ' \\\ |";
+        if (!strongPasswordPattern.test(value)) {
+          return strongPasswordMessage;
         }
       },
     })
@@ -896,7 +892,7 @@ onMounted(() => {
   getDeptTree();
   getList();
   proxy.getConfigKey("sys.user.initPassword").then((response) => {
-    initPassword.value = response.msg && response.msg.length >= 8 ? response.msg : defaultInitPassword;
+    initPassword.value = response.msg && strongPasswordPattern.test(response.msg) ? response.msg : defaultInitPassword;
   });
 });
 </script>

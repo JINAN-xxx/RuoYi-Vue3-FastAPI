@@ -20,6 +20,8 @@
 import { updateUserPwd } from "@/api/system/user";
 
 const { proxy } = getCurrentInstance();
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s<>"'|\\])[^<>"'|\\\s]{8,24}$/;
+const strongPasswordMessage = "密码长度必须介于 8 和 24 之间，且必须包含大小写字母、数字和特殊字符";
 
 const user = reactive({
   oldPassword: undefined,
@@ -36,7 +38,7 @@ const equalToPassword = (rule, value, callback) => {
 };
 const rules = ref({
   oldPassword: [{ required: true, message: "旧密码不能为空", trigger: "blur" }],
-  newPassword: [{ required: true, message: "新密码不能为空", trigger: "blur" }, { min: 8, max: 20, message: "长度在 8 到 20 个字符", trigger: "blur" }, { pattern: /^[^<>"'|\\]+$/, message: "不能包含非法字符：< > \" ' \\\ |", trigger: "blur" }],
+  newPassword: [{ required: true, message: "新密码不能为空", trigger: "blur" }, { pattern: strongPasswordPattern, message: strongPasswordMessage, trigger: "blur" }],
   confirmPassword: [{ required: true, message: "确认密码不能为空", trigger: "blur" }, { required: true, validator: equalToPassword, trigger: "blur" }]
 });
 

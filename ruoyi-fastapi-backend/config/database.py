@@ -59,6 +59,7 @@ def create_async_db_engine(echo: bool | None = None) -> AsyncEngine:
         echo=DataBaseConfig.db_echo if echo is None else echo,
         max_overflow=DataBaseConfig.db_max_overflow,
         pool_size=DataBaseConfig.db_pool_size,
+        pool_pre_ping=DataBaseConfig.db_pool_pre_ping,
         pool_recycle=DataBaseConfig.db_pool_recycle,
         pool_timeout=DataBaseConfig.db_pool_timeout,
     )
@@ -76,6 +77,7 @@ def create_sync_db_engine(echo: bool | None = None) -> Engine:
         echo=DataBaseConfig.db_echo if echo is None else echo,
         max_overflow=DataBaseConfig.db_max_overflow,
         pool_size=DataBaseConfig.db_pool_size,
+        pool_pre_ping=DataBaseConfig.db_pool_pre_ping,
         pool_recycle=DataBaseConfig.db_pool_recycle,
         pool_timeout=DataBaseConfig.db_pool_timeout,
     )

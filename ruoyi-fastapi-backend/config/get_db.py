@@ -28,6 +28,7 @@ async def init_create_table() -> None:
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_ensure_knowledge_document_schema)
+        await conn.run_sync(_ensure_sys_logininfor_schema)
     logger.info('✅️ 数据库连接成功')
 
 
@@ -53,6 +54,34 @@ def _ensure_knowledge_document_schema(sync_conn) -> None:
     else:
         sync_conn.exec_driver_sql(
             "ALTER TABLE knowledge_document ADD COLUMN provider_name VARCHAR(32) NULL COMMENT '索引Provider'"
+        )
+
+
+def _ensure_sys_logininfor_schema(sync_conn) -> None:
+    """
+    为历史数据库补齐登录日志表字段长度
+
+    :param sync_conn: 同步连接
+    :return: None
+    """
+    inspector = inspect(sync_conn)
+    if not inspector.has_table('sys_logininfor'):
+        return
+
+    msg_column = next((column for column in inspector.get_columns('sys_logininfor') if column['name'] == 'msg'), None)
+    if not msg_column:
+        return
+
+    msg_length = getattr(msg_column.get('type'), 'length', None)
+    if msg_length is not None and msg_length >= 2000:
+        return
+
+    logger.info('🧩 检测到 sys_logininfor.msg 字段长度不足，开始自动扩容')
+    if DataBaseConfig.db_type == 'postgresql':
+        sync_conn.exec_driver_sql('ALTER TABLE sys_logininfor ALTER COLUMN msg TYPE VARCHAR(2000)')
+    else:
+        sync_conn.exec_driver_sql(
+            "ALTER TABLE sys_logininfor MODIFY COLUMN msg VARCHAR(2000) DEFAULT '' COMMENT '提示消息'"
         )
 
 

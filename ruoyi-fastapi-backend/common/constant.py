@@ -28,6 +28,7 @@ class CommonConstant:
     MIN_PASSWORD_LENGTH = 8
     MAX_PASSWORD_LENGTH = 24
     PASSWORD_PATTERN = r"""^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s<>"'|\\])[^<>"'|\\\s]{8,24}$"""
+    PASSWORD_HASH_PATTERN = r'^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$'
     PASSWORD_VALIDATE_MESSAGE = (
         f'密码长度必须介于{MIN_PASSWORD_LENGTH}和{MAX_PASSWORD_LENGTH}个字符之间，'
         '且必须包含大小写字母、数字和特殊字符'

@@ -54,6 +54,8 @@ class UserModel(BaseModel):
     def check_password(self) -> 'UserModel':
         if self.password is None:
             return self
+        if re.match(CommonConstant.PASSWORD_HASH_PATTERN, self.password):
+            return self
         if re.match(CommonConstant.PASSWORD_PATTERN, self.password):
             return self
         if re.search(r"""[<>"'|\\]""", self.password):

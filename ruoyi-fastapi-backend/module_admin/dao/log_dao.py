@@ -155,7 +155,10 @@ class LoginLogDao:
         :param login_log: 登录日志对象
         :return: 新增校验结果
         """
-        db_login_log = SysLogininfor(**login_log.model_dump())
+        login_log_data = login_log.model_dump()
+        if login_log_data.get('msg'):
+            login_log_data['msg'] = login_log_data['msg'][:2000]
+        db_login_log = SysLogininfor(**login_log_data)
         db.add(db_login_log)
         await db.flush()
 

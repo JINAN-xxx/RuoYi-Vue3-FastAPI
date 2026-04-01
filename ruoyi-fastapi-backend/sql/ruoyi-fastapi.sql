@@ -621,7 +621,7 @@ create table sys_logininfor (
   browser        varchar(50)    default ''                comment '浏览器类型',
   os             varchar(50)    default ''                comment '操作系统',
   status         char(1)        default '0'               comment '登录状态（0成功 1失败）',
-  msg            varchar(255)   default ''                comment '提示消息',
+  msg            varchar(2000)  default ''                comment '提示消息',
   login_time     datetime                                 comment '访问时间',
   primary key (info_id),
   key idx_sys_logininfor_s  (status),
